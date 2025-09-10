@@ -1,0 +1,1 @@
+This repository covers the foundation of data science for MB5370 Module 4 with hands-on practice in reproducible researh and version control, data visulization using ggplot2, data wrangling, and sptail data analysis.
