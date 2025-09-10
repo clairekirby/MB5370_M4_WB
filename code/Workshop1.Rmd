@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Install and load tidyverse packages
 ```{r}
-## install.packages("tidyverse") # Delete this line once installed
+#install.packages("tidyverse") # Delete this line once installed
 library("tidyverse")
 ```
 
@@ -34,11 +34,10 @@ summary(mpg)
 # Create first plot
 ```{r}
 ggplot(data = mpg) + 
-  geom_point(mapping = aes(x = disp, y = hwy))
+  geom_point(mapping = aes(x = displ, y = hwy))
 ```
 
 The plot shows a negative relationship between engine size (displ) and fuel efficiency (hwy). In other words, cars with big engines use more fuel. What does this say about fuel efficiency and engine size?
-
 
 
 # Understanding grammar of graphics
@@ -135,7 +134,15 @@ ggplot(data = mpg) +
 Read ?facet_wrap. What does nrow do? What does ncol do? What other options control the layout of the individual panels? 
 
 ```{r}
+#nrow defines number of rows
+#ncol defines number of columns
+ggplot(mpg,aes(x = displ, y =hwy)) +
+  geom_point() +
+  facet_wrap(~class, nrow =2)
 
+ggplot(mpg,aes (x=displ, y=hwy))+
+  geom_point() +
+  facet_wrap(~class, ncol =3)
 ```
 
 
@@ -143,7 +150,7 @@ Read ?facet_wrap. What does nrow do? What does ncol do? What other options contr
 We already used points:
 ```{r}
 ggplot(data = mpg) + 
-  geom_point(mapping = aes(x = displx, y = hwy))
+  geom_point(mapping = aes(x = displ, y = hwy))
 ```
 
 
@@ -154,7 +161,10 @@ However, ggplot2 can use a variety of geom objects to represent the data. Here, 
 ggplot(data = mpg) + 
   geom_smooth(mapping = aes(x = displ, y = hwy))
 ```
-### Question: whey don't we use geom_line() here? What would that look like? ###
+### Question: why don't we use geom_line() here? What would that look like? ###
+```{r}
+#geom_line connects the points in the order in the data, while geom_smooth fits a smooth curve to show overall trend which makes more sense for this plot
+```
 
 
 So let’s recap. A geom is an object that your plot uses to represent the data. To change the geom type in your plot, simply change the geom function that you add to your plot template. Sometimes you may want to try a few things out, in which case you could use comments to help you remember what worked and what didn’t. 
@@ -163,10 +173,15 @@ So let’s recap. A geom is an object that your plot uses to represent the data.
 ```{r}
 ggplot(data = mpg) + 
   #geom_point(mapping = aes(x = displ, y = hwy)) + # points horrible 
-  geom_smooth(mappings = aes(x = displ, y = hwy)) # try smooth line
+  geom_smooth(mapping = aes(x = displ, y = hwy)) # try smooth line
 ```
 
 Question: how does R work out where to plot the line??? Can use the chunk output to inform us. Can also use the help menu.
+
+```{r}
+# R fits statistical model to data by joining the dotsss in a non-linear matter drawing a smooth curve through them
+```
+
 
 # Changing linetype
 ```{r}
@@ -194,7 +209,7 @@ ggplot(data = mpg) +
 We already did this one way
 ```{r}
 ggplot(data = mpg) + 
-  geom_point(mapping = aes(xx = displ, y = hwy)) +
+  geom_point(mapping = aes(x = displ, y = hwy)) +
   geom_smooth(mapping = aes(x = displ, y = hwy))
 ```
 
@@ -223,17 +238,45 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
 ```
 Question: what does the "se = FALSE" do?
 
+```{r}
+#The argument se controls where the grey shaded confidence band is shown. Therefore, se = FALSE hides the confidence inerval 
+```
+
 
 # Exercise:
 1.  What geom would you use to draw a line chart? A boxplot? A histogram? An area chart?
 2.  Run this code in your head and predict what the output will look like. Then, run the code in R and check your predictions.
 
 ```{r}
+#line chart = geom_line()
+#boxplot = geom_boxplot()
+#histrogram = geom_histogram ()
+#area chart = geom_area()
+```
+
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point(mapping = aes(color = class)) + 
+  geom_line (data = filter(mpg, class == "subcompact"))
+
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point(mapping = aes(color = class)) + 
+  geom_boxplot(data = filter(mpg,class == "subcompact"))
+
+ggplot(data = mpg, mapping = aes(x = displ, fill = class)) +
+  geom_histogram(binwidth = 2, color = "black",position = "dodge")
+
+  ggplot(data = mpg, mapping = aes(x = displ, y = hwy, fill = class))+
+    geom_area(aplha =0.6, position = "stack")
 
 ```
 
-
 3.  Will these two graphs look different? Why/why not?
+
+```{r}
+#no, they will look the same as containing similar dataset and variables. The only difference is the style of coding
+```
+
 ```{r}
 ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
   geom_point() + 
@@ -279,6 +322,11 @@ ggplot(data = demo) +
   geom_bar(mapping = aes(x = cut, y = freq), stat = "identity")
 ```
 Question: Why did we specify now specify a y axis?
+
+```{r}
+#I am not plotting the raw data,I want frequency not count
+```
+
 
 # What if we want to know the proportion rather than the absolute frequency?
 ```{r}
