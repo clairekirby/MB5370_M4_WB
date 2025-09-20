@@ -1,0 +1,209 @@
+---
+title: "Spatial_data"
+author: "Claire Kirby
+date: "2025-09-19"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+1.1 Install and load spatial packages
+```{r}
+install.packages("sf")
+install.packages("terra")
+#install.packages("tmap")
+install.packages("terra")
+
+#load packages
+library(tidyverse)
+library(sf) #simple features
+library(terra) #for raster
+library(tmap) #Thematic maps are geographical maps in which spatial data distributions are visualized
+```
+1.2 Load Spatial dataset
+```{r}
+library(readr)
+
+dat <- read_csv("C:/Users/kirby/OneDrive/Documents/Techniques_R/MB5370_Workbook_Kirby/data_analysis2/MB5370_M4_WB/data-for-course/copepods_raw.csv")
+
+dat
+```
+1.3 Data exploration
+
+*1.3.1 Check coordinates*
+```{r}
+library (ggplot2)
+ggplot(dat) +
+  aes(x = longitude, y= latitude, color = richness_raw) +
+  geom_point()
+```
+
+*1.3.2 Visualize richness data in non-spatial way*
+```{r}
+ggplot(dat, aes(x = latitude, y = richness_raw)) + 
+  stat_smooth() + 
+  geom_point()
+
+#data patterns representing something is unusual especially at latitude-40?
+
+```
+
+1.4 Now time to map dataset, firstly turning data into a simple features collection
+```{r}
+sdat <- st_as_sf(dat, coords = c("longitude", "latitude"), 
+                 crs = 4326)
+
+```
+
+1.5 Coordinate reference systems
+```{r}
+#Using EPSG code for chosen coordinate reference system (CRS) in R
+
+crs4326 <- st_crs(4326)
+crs4326 # look at the whole CRS
+crs4326$Name # pull out just the name of the crs
+
+#[1] "WGS 84"
+```
+```{r}
+# What does the WKT look like?
+
+crs4326$wkt # crs in well-known text format
+```
+1.6 Feature collection (points)
+```{r}
+sdat
+
+#similar to dat table, but now has a geometry column. This is where the coordinates are stored.
+```
+
+1.7 Cartography
+```{r}
+#Plot the richness column
+plot(sdat["richness_raw"])
+
+```
+
+1.8 Thematic maps for communication
+```{r}
+#using tmap
+
+tm1 <- tm_shape(sdat) + 
+  tm_dots(fill = "richness_raw")
+
+tm1
+```
+
+```{r}
+#save map to working directory
+tmap_save(tm1, filename = "Richness-map.png", 
+          width = 600, height = 600)
+```
+
+1.9 Mapping spatial polygons as layers
+```{r}
+#Load Aussie shapefile
+
+aus <- st_read("C:/Users/kirby/OneDrive/Documents/Techniques_R/MB5370_Workbook_Kirby/data_analysis2/MB5370_M4_WB/data-for-course/spatial-data/Aussie/Aussie.shp")
+
+```
+```{r}
+#Load Aus_shelf shapefile
+
+shelf <- st_read("C:/Users/kirby/OneDrive/Documents/Techniques_R/MB5370_Workbook_Kirby/data_analysis2/MB5370_M4_WB/data-for-course/spatial-data/aus_shelf/aus_shelf.shp")
+
+
+```
+```{r}
+#check data for aussie shapefile
+
+aus
+```
+```{r}
+#check data for aussie shelf shapefile
+
+shelf
+```
+*1.9.1 Mapping polygons*
+```{r}
+tm_shape(shelf) + 
+  tm_polygons()
+```
+```{r}
+#expand the extent of the map to depict all copepod data points and add aus shapefile in the form of points 
+
+tm_shape(shelf, bbox = sdat) + 
+  tm_polygons() +
+  tm_shape(aus) + 
+  tm_polygons() + 
+  tm_shape(sdat) + 
+  tm_dots()
+```
+
+1.10 Exploring t_map
+```{r}
+tmap_style("beaver")
+tmap_mode("plot")
+
+tm_shape(aus, bbox = sdat) +
+  tm_polygons(col = "lightgrey", border.col = NA) +
+  tm_shape(shelf) +
+  tm_polygons(col = "skyblue", alpha = 0.5, border.col = NA) +
+  tm_shape(sdat) +
+  tm_dots(
+    col = "richness_raw",
+    palette = "viridis",             # still color-blind friendly
+    style = "fixed",                 # discrete bins instead of gradient
+    breaks = c(0, 30, 60, 90, 120),  # define bins
+    labels = c("0–30", "30–60", "60–90", "90–120"),
+    size = 0.30,
+    title = "Richness"
+  ) +
+  tm_graticules(lines = TRUE, labels.size = 0.7, zindex = -1) +
+  tm_layout(
+    main.title = "Australia Copepod Richness",
+    frame = TRUE,
+    legend.outside = TRUE,
+    legend.outside.position = "top",   # put legend above the plot
+    legend.stack = "horizontal",       # show categories side-by-side
+    legend.show = TRUE,
+    legend.text.size = 0.9,
+    legend.title.size = 1.1
+  ) +
+  tm_xlab("Longitude") +
+  tm_ylab("Latitude")
+```
+
+
+
+1.11 Exporting map
+```{r}
+?tmap_save
+
+tmap_save(filename = "austraila_copepod_richness.png",
+          width =10,
+          height =8,
+          dpi =300)
+```
+
